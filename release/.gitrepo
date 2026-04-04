@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/pmalacho-mit/svelte-schema-renderer-suede
+	branch = release
+	commit = 1658cd032164fdbc0173696ab2a85c9fef8a2a96
+	parent = f8693dd03b231b2843983f24bf446b91d16a3ca8
+	method = merge
+	cmdver = 0.4.9
