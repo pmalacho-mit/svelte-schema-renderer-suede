@@ -1,0 +1,66 @@
+import type { FromKind, Kind, RenderNode } from "./types.js";
+import type { RecursivePartial } from "./utils";
+
+export type Mode = "edit" | "stream" | "view";
+export type Data = Record<string, unknown>;
+
+type State<TMode extends Mode, TData> = TMode extends "stream"
+  ? RecursivePartial<TData>
+  : TData;
+
+export class SchemaModel<TMode extends Mode = Mode, TData extends Data = Data> {
+  data = $state({} as State<TMode, TData>);
+
+  readonly mode: TMode;
+
+  get editable() {
+    return this.mode === "edit";
+  }
+
+  constructor(mode: TMode, initial?: State<TMode, TData>) {
+    this.mode = mode;
+    if (initial) this.data = structuredClone(initial);
+  }
+
+  /** Read a value at a dotted path */
+  get<K extends Kind>({
+    path,
+  }: Pick<RenderNode & { kind: K }, "path" | "kind">): FromKind<K> | undefined {
+    return path.split(".").reduce<any>((obj, key) => obj?.[key], this.data);
+  }
+
+  set({ path }: Pick<RenderNode, "path">, value: unknown): void {
+    if (path === "") {
+      this.data = value as State<TMode, TData>;
+      return;
+    }
+    const keys = path.split(".");
+    let target: any = this.data;
+    for (let i = 0; i < keys.length - 1; i++) {
+      const k = keys[i];
+      if (target[k] === undefined)
+        target[k] = isNaN(Number(keys[i + 1])) ? {} : [];
+      target = target[k];
+    }
+    target[keys[keys.length - 1]] = value;
+  }
+
+  remove({ path }: Pick<RenderNode, "path">): void {
+    const keys = path.split(".");
+    let obj: any = this.data;
+    for (const k of keys.slice(0, -1)) {
+      if (obj?.[k] === undefined) return;
+      obj = obj[k];
+    }
+    delete obj[keys[keys.length - 1]];
+  }
+
+  applyPartial(partial: Record<string, unknown>, basePath = ""): void {
+    for (const [key, val] of Object.entries(partial)) {
+      const fullPath = basePath ? `${basePath}.${key}` : key;
+      if (val !== null && typeof val === "object" && !Array.isArray(val))
+        this.applyPartial(val as Record<string, unknown>, fullPath);
+      else this.set({ path: fullPath }, val);
+    }
+  }
+}
