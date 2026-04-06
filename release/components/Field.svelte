@@ -108,22 +108,15 @@
   const nodeRenderer = $derived(!optedOut ? renderer() : null);
   const optInRenderer = $derived(optedOut ? renderer("opt_in__") : null);
   const optOutRenderer = $derived(canOptOut ? renderer("opt_out__") : null);
-  const pushRenderer = $derived(editableArray ? renderer("push__") : null);
-  const spliceRenderer = $derived(editableArray ? renderer("splice__") : null);
-
-  const hasRenderers = $derived(
-    Boolean(
-      nodeRenderer ||
-        optInRenderer ||
-        optOutRenderer ||
-        pushRenderer ||
-        spliceRenderer,
-    ),
-  );
 
   const rendererArgs = $derived(
-    hasRenderers ? { node, model, renderChild } : null,
+    nodeRenderer || optInRenderer || optOutRenderer
+      ? { node, model, renderChild }
+      : null,
   );
+
+  const pushRenderer = $derived(editableArray ? renderer("push__") : null);
+  const spliceRenderer = $derived(editableArray ? renderer("splice__") : null);
 </script>
 
 {#snippet renderChild(
