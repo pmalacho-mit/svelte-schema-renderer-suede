@@ -29,11 +29,15 @@ export class SchemaModel<TMode extends Mode = Mode, TData extends Data = Data> {
     return path.split(".").reduce<any>((obj, key) => obj?.[key], this.data);
   }
 
-  set({ path }: Pick<RenderNode, "path">, value: unknown): void {
-    if (path === "") {
-      this.data = value as State<TMode, TData>;
-      return;
-    }
+  set<K extends Kind>(
+    { path }: Pick<RenderNode & { kind: K }, "path" | "kind">,
+    value: FromKind<K>,
+  ): void {
+    this.#set(path, value);
+  }
+
+  #set(path: string, value: unknown) {
+    if (path === "") return (this.data = value as State<TMode, TData>);
     const keys = path.split(".");
     let target: any = this.data;
     for (let i = 0; i < keys.length - 1; i++) {
@@ -56,11 +60,11 @@ export class SchemaModel<TMode extends Mode = Mode, TData extends Data = Data> {
   }
 
   applyPartial(partial: Record<string, unknown>, basePath = ""): void {
-    for (const [key, val] of Object.entries(partial)) {
-      const fullPath = basePath ? `${basePath}.${key}` : key;
-      if (val !== null && typeof val === "object" && !Array.isArray(val))
-        this.applyPartial(val as Record<string, unknown>, fullPath);
-      else this.set({ path: fullPath }, val);
+    for (const [key, value] of Object.entries(partial)) {
+      const path = basePath ? `${basePath}.${key}` : key;
+      if (value !== null && typeof value === "object" && !Array.isArray(value))
+        this.applyPartial(value as Record<string, unknown>, path);
+      else this.#set(path, value);
     }
   }
 }
