@@ -6,7 +6,7 @@
 [subrepo]
 	remote = https://github.com/pmalacho-mit/svelte-schema-renderer-suede
 	branch = release
-	commit = 1658cd032164fdbc0173696ab2a85c9fef8a2a96
-	parent = f8693dd03b231b2843983f24bf446b91d16a3ca8
+	commit = cd8b7e7343c00bd67de01db800ba0d051ff7d039
+	parent = 3b718fd1e77a626f2c9a794c1975700eb561bcbb
 	method = merge
 	cmdver = 0.4.9
