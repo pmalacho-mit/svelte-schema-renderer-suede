@@ -13,13 +13,13 @@
       "properties": {
         "deviceType": { "const": "smartphone" }
       },
-      "$ref": "https://example.com/smartphone.schema.json"
+      "$ref": "/device/smartphone.schema.json"
     },
     {
       "properties": {
         "deviceType": { "const": "laptop" }
       },
-      "$ref": "https://example.com/laptop.schema.json"
+      "$ref": "/device/laptop.schema.json"
     }
   ]
 }

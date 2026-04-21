@@ -34,7 +34,7 @@
       }
     },
     "emergencyContact": {
-      "$ref": "https://example.com/user-profile.schema.json"
+      "$ref": "/user-profile/schema.json"
     }
   }
 }

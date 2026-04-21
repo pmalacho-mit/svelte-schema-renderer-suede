@@ -23,6 +23,7 @@ export type RenderNode =
       "string",
       {
         format?: string;
+        const?: string | number | boolean;
       }
     >
   | Base<
@@ -70,6 +71,8 @@ export interface Context {
   rootSchema: JSONSchema7;
   /** Track visited $refs to detect circular references */
   refStack: Set<string>;
+  /** Pre-fetched external schemas keyed by document URL (no fragment) */
+  externalSchemas: Map<string, JSONSchema7>;
 }
 
 export type KindOf<T> = T extends string

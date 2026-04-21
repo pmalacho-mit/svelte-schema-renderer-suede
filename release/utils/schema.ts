@@ -16,6 +16,12 @@ export const infer = (schema: JSONSchema7): JSONSchema7TypeName | undefined => {
   if (schema.type)
     return Array.isArray(schema.type) ? schema.type[0] : schema.type;
 
+  // Infer from a const value
+  if (schema.const !== undefined) {
+    const t = typeof schema.const;
+    if (t === "string" || t === "number" || t === "boolean") return t;
+  }
+
   // Infer from the presence of type-specific keywords
   if (schema.properties || schema.additionalProperties || schema.required)
     return "object";

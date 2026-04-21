@@ -3,7 +3,7 @@
   import { Model, root, Schema } from "../release";
 
   const examples = import.meta.glob<Record<string, unknown>>(
-    "/src/examples/**/*.json",
+    "/public/**/*.json",
     { import: "default" },
   );
 
@@ -35,5 +35,7 @@
 </select>
 
 {#await options[selected].importer() then { data, schema }}
-  <Schema model={new Model("edit", data)} node={root(schema)} />
+  {#await root(schema) then rootNode}
+    <Schema model={new Model("edit", data)} root={rootNode} />
+  {/await}
 {/await}

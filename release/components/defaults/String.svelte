@@ -21,8 +21,10 @@
   let { node, model }: Field.Props<"string"> = $props();
 
   const type = $derived(format(node));
-  const value = $derived(model.get(node) ?? "");
-  const disabled = $derived(!model.editable);
+  const value = $derived(
+    node.const !== undefined ? String(node.const) : (model.get(node) ?? ""),
+  );
+  const disabled = $derived(!model.editable || node.const !== undefined);
 </script>
 
 <label>
