@@ -20,8 +20,15 @@
       case "object":
         if (typeof value !== "object" || value === null || Array.isArray(value))
           return false;
-        // Check that at least some of the required children exist
         const obj = value as Record<string, unknown>;
+        // Check const-discriminator fields match
+        for (const child of variant.children) {
+          if (child.kind === "string" && child.const !== undefined) {
+            const key = child.path.split(".").at(-1)!;
+            if (obj[key] !== child.const) return false;
+          }
+        }
+        // Check that at least some of the required children exist
         for (const key of variant.required) {
           const childPath = variant.children.find(
             (c) => c.path.split(".").at(-1) === key,
@@ -52,8 +59,14 @@
         return variant.default ?? 0;
       case "boolean":
         return variant.default ?? false;
-      case "object":
-        return {};
+      case "object": {
+        const seed: Record<string, unknown> = {};
+        for (const child of variant.children) {
+          if (child.kind === "string" && child.const !== undefined)
+            seed[child.path.split(".").at(-1)!] = child.const;
+        }
+        return seed;
+      }
       case "array":
         return [];
       case "enum":
@@ -63,8 +76,17 @@
     }
   };
 
-  const label = (variant: RenderNode, index: number): string =>
-    variant.title ?? `Option ${index + 1}`;
+  const label = (variant: RenderNode, index: number): string => {
+    if (variant.title) return variant.title;
+    // For object variants, use the first child's const value as a label
+    if (variant.kind === "object") {
+      for (const child of variant.children) {
+        if (child.kind === "string" && child.const !== undefined)
+          return String(child.const);
+      }
+    }
+    return `Option ${index + 1}`;
+  };
 </script>
 
 <script lang="ts">
