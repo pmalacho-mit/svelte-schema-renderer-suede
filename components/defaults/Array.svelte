@@ -12,12 +12,13 @@
   }: Field.Props<"array"> = $props();
 
   const items = $derived(model.get(node)!);
+  const addable = $derived(
+    model.editable && (node.maxItems == null || items!.length < node.maxItems),
+  );
 </script>
 
 <fieldset>
-  {#if node.title}
-    <legend>{node.title}</legend>
-  {/if}
+  <legend>{node.title ?? node.path}</legend>
 
   {#each items as _, index (index)}
     <div>
@@ -33,7 +34,7 @@
     </div>
   {/each}
 
-  {#if model.editable && (node.maxItems == null || items!.length < node.maxItems)}
+  {#if addable}
     {@const index = items!.length}
     {#if pushRenderer}
       {@render pushRenderer({ node, model, index })}

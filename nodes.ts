@@ -5,11 +5,61 @@ import { merge, mergeSchemas } from "./utils/merge.js";
 import { isSchema, infer } from "./utils/schema.js";
 import { resolve } from "./utils/refs.js";
 
-export const root = (schema: JSONSchema7, path: string = "") =>
-  node(schema, path, {
+export const root = async (
+  schema: JSONSchema7,
+  path: string = "",
+): Promise<RenderNode> => {
+  const externalSchemas = new Map<string, JSONSchema7>();
+  await prefetchExternalRefs(schema, externalSchemas);
+  return node(schema, path, {
     rootSchema: schema,
     refStack: new Set(),
+    externalSchemas,
   });
+};
+
+const collectExternalRefs = (schema: unknown, refs: Set<string>): void => {
+  if (Array.isArray(schema)) {
+    schema.forEach((item) => collectExternalRefs(item, refs));
+    return;
+  }
+  if (!schema || typeof schema !== "object") return;
+  const obj = schema as Record<string, unknown>;
+  if (typeof obj.$ref === "string" && !obj.$ref.startsWith("#")) {
+    const hashIdx = obj.$ref.indexOf("#");
+    const docUrl = hashIdx === -1 ? obj.$ref : obj.$ref.slice(0, hashIdx);
+    if (docUrl) refs.add(docUrl);
+  }
+  for (const value of Object.values(obj)) collectExternalRefs(value, refs);
+};
+
+const prefetchExternalRefs = async (
+  schema: unknown,
+  externalSchemas: Map<string, JSONSchema7>,
+  fetching: Set<string> = new Set(),
+): Promise<void> => {
+  const refs = new Set<string>();
+  collectExternalRefs(schema, refs);
+
+  await Promise.all(
+    Array.from(refs)
+      .filter((ref) => !externalSchemas.has(ref) && !fetching.has(ref))
+      .map(async (ref) => {
+        fetching.add(ref);
+        try {
+          const response = await fetch(ref);
+          if (!response.ok) return;
+          const fetched = (await response.json()) as JSONSchema7;
+          externalSchemas.set(ref, fetched);
+          // Recursively pre-fetch any refs found in the fetched schema
+          await prefetchExternalRefs(fetched, externalSchemas, fetching);
+        } catch {
+          // Fetch failed; ref will remain unresolved and fall back to the
+          // existing "unresolved $ref" warning path
+        }
+      }),
+  );
+};
 
 const node = (raw: JSONSchema7, path: string, ctx: Context): RenderNode => {
   // Step 1: Resolve $ref (possibly recursive)
@@ -49,6 +99,7 @@ const node = (raw: JSONSchema7, path: string, ctx: Context): RenderNode => {
         options,
         format: schema.format,
         default: schema.default,
+        const: schema.const as string | number | boolean | undefined,
       };
     case "number":
     case "integer":

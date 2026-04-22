@@ -2,8 +2,9 @@
   import type { Field } from "../Field.svelte";
 
   let { node, model }: Field.Props<"number"> = $props();
+  const { get, set } = $derived(model.accessors(node));
 
-  const value = $derived(String(model.get(node) ?? ""));
+  const value = $derived(String(get() ?? ""));
   const disabled = $derived(!model.editable);
 </script>
 
@@ -14,7 +15,7 @@
     <select
       {value}
       {disabled}
-      onchange={(e) => model.set(node, Number(e.currentTarget.value))}
+      onchange={({ currentTarget: { value } }) => set(Number(value))}
     >
       <option value="" disabled>Select…</option>
       {#each node.options as opt}
@@ -28,7 +29,7 @@
       {disabled}
       min={node.min}
       max={node.max}
-      oninput={(e) => model.set(node, e.currentTarget.valueAsNumber)}
+      oninput={({ currentTarget: { valueAsNumber } }) => set(valueAsNumber)}
     />
   {/if}
 </label>
