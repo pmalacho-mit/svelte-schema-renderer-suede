@@ -18,8 +18,10 @@
   );
 </script>
 
-<fieldset {...attributes(node, model)}>
-  <legend title={tooltip(node, model)}>{title(node, model)}</legend>
+<fieldset {...attributes(node)}>
+  <legend title={tooltip(node, model)} {...attributes.role("name")}>
+    {title(node, model)}
+  </legend>
 
   {#each items as _, index (index)}
     {@render renderChild(arrayItemAtIndex(node, index), "array", index)}

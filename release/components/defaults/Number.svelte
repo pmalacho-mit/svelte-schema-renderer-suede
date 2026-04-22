@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Field } from "../Field.svelte";
   import { attributes, title, tooltip } from "./common.js";
+  import PlaceholderOption from "./PlaceholderOption.svelte";
 
   let { node, model }: Field.Props<"number"> = $props();
   const { get, set } = $derived(model.accessors(node));
@@ -9,8 +10,10 @@
   const disabled = $derived(!model.editable);
 </script>
 
-<label {...attributes(node, model)}>
-  <span title={tooltip(node, model)}>{title(node, model)}</span>
+<label {...attributes(node)}>
+  <span title={tooltip(node, model)} {...attributes.role("name")}>
+    {title(node, model)}
+  </span>
 
   {#if node.options}
     <select
@@ -18,7 +21,7 @@
       {disabled}
       onchange={({ currentTarget: { value } }) => set(Number(value))}
     >
-      <option value="" disabled>Select…</option>
+      <PlaceholderOption />
       {#each node.options as opt}
         <option value={String(opt)}>{opt}</option>
       {/each}

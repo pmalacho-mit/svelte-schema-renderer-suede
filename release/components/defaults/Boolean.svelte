@@ -6,12 +6,14 @@
   const { get, set } = $derived(model.accessors(node));
 </script>
 
-<label {...attributes(node, model)}>
+<label {...attributes(node)}>
   <input
     type="checkbox"
     checked={get() ?? false}
     onchange={({ currentTarget: { checked } }) => set(checked)}
     disabled={!model.editable}
   />
-  <span title={tooltip(node, model)}>{title(node, model)}</span>
+  <span title={tooltip(node, model)} {...attributes.role("name")}>
+    {title(node, model)}
+  </span>
 </label>

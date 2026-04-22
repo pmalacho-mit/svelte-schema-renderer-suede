@@ -123,8 +123,10 @@
   }
 </script>
 
-<fieldset {...attributes(node, model)}>
-  <legend title={tooltip(node, model)}>{title(node, model)}</legend>
+<fieldset {...attributes(node)}>
+  <legend title={tooltip(node, model)} {...attributes.role("name")}>
+    {title(node, model)}
+  </legend>
 
   {#if model.editable}
     <div>

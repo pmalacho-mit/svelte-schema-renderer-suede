@@ -6,7 +6,6 @@
 
   let {
     node,
-    model,
     action,
     onclick,
     children,
@@ -19,7 +18,7 @@
 
 <button
   data-action={action}
-  {...attributes(node, model)}
+  {...attributes(node)}
   title={`${action} ${node.title ?? node.path}`}
   {onclick}
 >

@@ -34,8 +34,14 @@ export const title = (node: RenderNode, model: Model) =>
 export const tooltip = (node: RenderNode, model: Model) =>
   !node.title && model.abbreviatePaths ? node.path : undefined;
 
-export const attributes = (node: RenderNode, model: Model) => ({
-  "data-kind": node.kind,
-  "data-path": node.path,
-  "data-name": title(node, model),
-});
+export const attributes = Object.assign(
+  (node: RenderNode) => ({
+    "data-kind": node.kind,
+    "data-path": node.path,
+  }),
+  {
+    role: (detail: "container" | "name" | "placeholder") => ({
+      "data-role": detail,
+    }),
+  },
+);
