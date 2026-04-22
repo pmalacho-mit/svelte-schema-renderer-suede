@@ -1,7 +1,10 @@
 <script lang="ts">
   import type { Field } from "../Field.svelte";
+  import Action from "./Action.svelte";
 
   let { node, model, index }: Field.ArrayActionProps = $props();
+
+  const onclick = () => model.get(node)!.splice(index, 1);
 </script>
 
-<button onclick={() => model.get(node)!.splice(index, 1)}>Remove</button>
+<Action {node} {model} {onclick} action="splice">Remove</Action>

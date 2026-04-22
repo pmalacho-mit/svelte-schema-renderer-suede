@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { valueForNode } from ".";
+  import { valueForNode } from "./common";
   import type { Field } from "../Field.svelte";
+  import Action from "./Action.svelte";
 
   let { node, model }: Field.ArrayActionProps = $props();
+
+  const onclick = () => model.get(node)!.push(valueForNode(node.itemNode));
 </script>
 
-<button onclick={() => model.get(node)!.push(valueForNode(node.itemNode))}>
-  + Add item
-</button>
+<Action {node} {model} {onclick} action="push">+ Add item</Action>

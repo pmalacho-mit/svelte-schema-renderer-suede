@@ -8,17 +8,27 @@ type State<TMode extends Mode, TData> = TMode extends "stream"
   ? RecursivePartial<TData>
   : TData;
 
+export type SchemaModelOptions = {
+  abbreviatePaths?: boolean;
+};
+
 export class SchemaModel<TMode extends Mode = Mode, TData extends Data = Data> {
   data = $state({} as State<TMode, TData>);
 
   readonly mode: TMode;
+  readonly abbreviatePaths: boolean;
 
   get editable() {
     return this.mode === "edit";
   }
 
-  constructor(mode: TMode, initial?: State<TMode, TData>) {
+  constructor(
+    mode: TMode,
+    initial?: State<TMode, TData>,
+    options?: SchemaModelOptions,
+  ) {
     this.mode = mode;
+    this.abbreviatePaths = options?.abbreviatePaths ?? true;
     if (initial) this.data = structuredClone(initial);
   }
 

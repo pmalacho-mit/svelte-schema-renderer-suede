@@ -90,6 +90,8 @@
 </script>
 
 <script lang="ts">
+  import { attributes, tooltip, title } from "./common.js";
+
   let { node, model, renderChild }: Props = $props();
 
   let selectedIndex: number | null = $state(null);
@@ -121,10 +123,8 @@
   }
 </script>
 
-<fieldset>
-  {#if node.title}
-    <legend>{node.title}</legend>
-  {/if}
+<fieldset {...attributes(node, model)}>
+  <legend title={tooltip(node, model)}>{title(node, model)}</legend>
 
   {#if model.editable}
     <div>
@@ -134,7 +134,7 @@
           value={activeIndex != null ? String(activeIndex) : ""}
           onchange={(e) => selectVariant(Number(e.currentTarget.value))}
         >
-          <option value="" disabled>Select type…</option>
+          <option value="" disabled>Select…</option>
           {#each node.variants as variant, i}
             <option value={String(i)}>{label(variant, i)}</option>
           {/each}

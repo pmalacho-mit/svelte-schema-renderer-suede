@@ -1,6 +1,6 @@
 import type { Component } from "svelte";
 import type { Field } from "../Field.svelte";
-import type { Kind, RenderNode } from "../../types";
+import type { Kind } from "../../types";
 import String from "./String.svelte";
 import Number from "./Number.svelte";
 import Boolean from "./Boolean.svelte";
@@ -38,28 +38,3 @@ export const component = {
     splice: Splice,
   },
 };
-
-type Defaultable = Exclude<Kind, "oneOf" | "enum" | "unknown">;
-
-const defaults = {
-  string: "",
-  number: 0,
-  boolean: false,
-  get object() {
-    return {};
-  },
-  get array() {
-    return [];
-  },
-} satisfies Record<Defaultable, unknown>;
-
-const defaultable = (
-  node: RenderNode,
-): node is RenderNode & { kind: Defaultable } => node.kind in defaults;
-
-export const valueForNode = (node: RenderNode) =>
-  "default" in node
-    ? (node.default ?? defaults[node.kind])
-    : defaultable(node)
-      ? defaults[node.kind]
-      : null;

@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Field } from "../Field.svelte";
+  import { attributes, title, tooltip } from "./common.js";
 
   let { node, model }: Field.Props<"number"> = $props();
   const { get, set } = $derived(model.accessors(node));
@@ -8,8 +9,8 @@
   const disabled = $derived(!model.editable);
 </script>
 
-<label>
-  <span>{node.title ?? node.path}</span>
+<label {...attributes(node, model)}>
+  <span title={tooltip(node, model)}>{title(node, model)}</span>
 
   {#if node.options}
     <select
