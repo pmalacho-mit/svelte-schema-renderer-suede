@@ -17,6 +17,7 @@
 
 <script lang="ts">
   import type { Field } from "../Field.svelte";
+  import { tooltip, title, attributes } from "./common.js";
 
   let { node, model }: Field.Props<"string"> = $props();
 
@@ -27,8 +28,8 @@
   const disabled = $derived(!model.editable || node.const !== undefined);
 </script>
 
-<label>
-  <span>{node.title ?? node.path}</span>
+<label {...attributes(node, model)}>
+  <span title={tooltip(node, model)}>{title(node, model)}</span>
 
   {#if node.options}
     <select

@@ -25,6 +25,15 @@ type PathToSnippetRemap<
 export type PathToSnippetName<P extends string> =
   `${PathToSnippetRemap<PathToSnippetRemap<P, ".">, "*">}`;
 
+/**
+ * Returns the last dot-separated segment of a path for use as a display title.
+ * Array wildcard segments (`*`) are shown as "item".
+ */
+export const basename = (path: string): string => {
+  const last = path.split(".").at(-1) ?? path;
+  return last === "*" ? "item" : last;
+};
+
 export const arrayItemAtIndex = (
   node: SpecificNode<"array">,
   index: number,
