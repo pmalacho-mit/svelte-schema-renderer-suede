@@ -2,6 +2,7 @@
   import type { Field } from "../Field.svelte";
   import { arrayItemAtIndex } from "../naming.js";
   import { component } from ".";
+  import { attributes, title, tooltip } from "./common.js";
 
   let {
     node,
@@ -12,28 +13,29 @@
   }: Field.Props<"array"> = $props();
 
   const items = $derived(model.get(node)!);
+  const addable = $derived(
+    model.editable && (node.maxItems == null || items!.length < node.maxItems),
+  );
 </script>
 
-<fieldset>
-  {#if node.title}
-    <legend>{node.title}</legend>
-  {/if}
+<fieldset {...attributes(node)}>
+  <legend title={tooltip(node, model)} {...attributes.role("name")}>
+    {title(node, model)}
+  </legend>
 
   {#each items as _, index (index)}
-    <div>
-      {@render renderChild(arrayItemAtIndex(node, index), "array", index)}
-      {#if model.editable}
-        {#if spliceRenderer}
-          {@render spliceRenderer({ node, model, index })}
-        {:else}
-          {@const Component = component.forArray["splice"]}
-          <Component {node} {model} {index} />
-        {/if}
+    {@render renderChild(arrayItemAtIndex(node, index), "array", index)}
+    {#if model.editable}
+      {#if spliceRenderer}
+        {@render spliceRenderer({ node, model, index })}
+      {:else}
+        {@const Component = component.forArray["splice"]}
+        <Component {node} {model} {index} />
       {/if}
-    </div>
+    {/if}
   {/each}
 
-  {#if model.editable && (node.maxItems == null || items!.length < node.maxItems)}
+  {#if addable}
     {@const index = items!.length}
     {#if pushRenderer}
       {@render pushRenderer({ node, model, index })}

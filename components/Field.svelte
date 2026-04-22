@@ -88,6 +88,7 @@
   import { pathToSnippetName, type PathToSnippetName } from "./naming.js";
   import { component } from "./defaults";
   import Self from "./Field.svelte";
+  import { attributes } from "./defaults/common.js";
 
   let { node, model, renderers, parent, index }: Props = $props();
 
@@ -127,15 +128,15 @@
   <Self node={childNode} {model} {renderers} {parent} {index} />
 {/snippet}
 
-{#if optedOut}
-  {#if optInRenderer}
-    {@render optInRenderer(rendererArgs!)}
+<div data-role="container" {...attributes(node)}>
+  {#if optedOut}
+    {#if optInRenderer}
+      {@render optInRenderer(rendererArgs!)}
+    {:else}
+      {@const Component = component.byAction["opt_in__"]}
+      <Component {node} {model} />
+    {/if}
   {:else}
-    {@const Component = component.byAction["opt_in__"]}
-    <Component {node} {model} />
-  {/if}
-{:else}
-  <div data-kind={node.kind} data-path={node.path}>
     {#if canOptOut}
       {#if optOutRenderer}
         {@render optOutRenderer(rendererArgs!)}
@@ -161,5 +162,5 @@
         {spliceRenderer}
       />
     {/if}
-  </div>
-{/if}
+  {/if}
+</div>
