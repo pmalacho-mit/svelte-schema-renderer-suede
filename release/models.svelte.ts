@@ -67,4 +67,13 @@ export class SchemaModel<TMode extends Mode = Mode, TData extends Data = Data> {
       else this.#set(path, value);
     }
   }
+
+  accessors<K extends Kind>(node: RenderNode & { kind: K }) {
+    return {
+      get: () =>
+        this.get<K>(node as Pick<RenderNode & { kind: K }, "path" | "kind">),
+      set: (value: FromKind<K>) => this.set(node, value),
+      remove: () => this.remove(node),
+    };
+  }
 }

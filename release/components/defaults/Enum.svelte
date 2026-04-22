@@ -13,7 +13,7 @@
     onchange={(e) => {
       const raw = e.currentTarget.value;
       // Attempt to recover the original typed value
-      const match = node.options.find((o) => String(o) === raw);
+      const match = node.options.find((option) => String(option) === raw);
       model.set(node, match ?? raw);
     }}
     disabled={!model.editable}
