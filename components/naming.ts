@@ -30,7 +30,8 @@ export type PathToSnippetName<P extends string> =
  * Array wildcard segments (`*`) are shown as "item".
  */
 export const basename = (path: string): string => {
-  const last = path.split(".").at(-1) ?? path;
+  const index = path.lastIndexOf(".");
+  const last = index === -1 ? path : path.slice(index + 1);
   return last === "*" ? "item" : last;
 };
 

@@ -1,36 +1,28 @@
 <script lang="ts">
   import type { Field } from "../Field.svelte";
   import { attributes, title, tooltip } from "./common.js";
+  import PlaceholderOption from "./PlaceholderOption.svelte";
 
   let { node, model }: Field.Props<"number"> = $props();
-  const { get, set } = $derived(model.accessors(node));
 
-  const value = $derived(String(get() ?? ""));
   const disabled = $derived(!model.editable);
+  const value = $derived(model.get(node));
+  const on = $derived(model.on(node, Number));
 </script>
 
-<label {...attributes(node, model)}>
-  <span title={tooltip(node, model)}>{title(node, model)}</span>
+<label>
+  <span title={tooltip(node, model)} {...attributes.role("name")}>
+    {title(node, model)}
+  </span>
 
   {#if node.options}
-    <select
-      {value}
-      {disabled}
-      onchange={({ currentTarget: { value } }) => set(Number(value))}
-    >
-      <option value="" disabled>Select…</option>
-      {#each node.options as opt}
-        <option value={String(opt)}>{opt}</option>
+    <select {value} {disabled} onchange={on}>
+      <PlaceholderOption />
+      {#each node.options as option}
+        <option value={option}>{option}</option>
       {/each}
     </select>
   {:else}
-    <input
-      type="number"
-      {value}
-      {disabled}
-      min={node.min}
-      max={node.max}
-      oninput={({ currentTarget: { valueAsNumber } }) => set(valueAsNumber)}
-    />
+    <input type="number" {disabled} {...node} {value} oninput={on} />
   {/if}
 </label>

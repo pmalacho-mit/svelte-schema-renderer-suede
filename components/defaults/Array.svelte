@@ -10,6 +10,7 @@
     renderChild,
     pushRenderer,
     spliceRenderer,
+    insertRenderer,
   }: Field.Props<"array"> = $props();
 
   const items = $derived(model.get(node)!);
@@ -18,11 +19,25 @@
   );
 </script>
 
-<fieldset {...attributes(node, model)}>
-  <legend title={tooltip(node, model)}>{title(node, model)}</legend>
+<fieldset>
+  <legend title={tooltip(node, model)} {...attributes.role("name")}>
+    {title(node, model)}
+  </legend>
 
   {#each items as _, index (index)}
-    {@render renderChild(arrayItemAtIndex(node, index), "array", index)}
+    {@const child = arrayItemAtIndex(node, index)}
+
+    {#if addable}
+      {#if insertRenderer}
+        {@render insertRenderer({ node, model, index })}
+      {:else}
+        {@const Component = component.forArray["insert"]}
+        <Component {node} {model} {index} />
+      {/if}
+    {/if}
+
+    {@render renderChild(child, "array", index)}
+
     {#if model.editable}
       {#if spliceRenderer}
         {@render spliceRenderer({ node, model, index })}

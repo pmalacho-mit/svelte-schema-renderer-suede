@@ -13,6 +13,7 @@ import OptIn from "./OptIn.svelte";
 import OptOut from "./OptOut.svelte";
 import Push from "./Push.svelte";
 import Splice from "./Splice.svelte";
+import Insert from "./Insert.svelte";
 
 export const component = {
   byKind: {
@@ -36,5 +37,6 @@ export const component = {
   forArray: {
     push: Push,
     splice: Splice,
+    insert: Insert,
   },
 };

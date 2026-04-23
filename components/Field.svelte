@@ -18,6 +18,7 @@
       ? {
           pushRenderer: Snippet<[ArrayActionProps]> | null;
           spliceRenderer: Snippet<[ArrayActionProps]> | null;
+          insertRenderer: Snippet<[ArrayActionProps]> | null;
         }
       : {}) &
       (TKind extends "object" | "array" | "oneOf"
@@ -51,7 +52,7 @@
       >;
     };
 
-    export type ArrayActions = "push__" | "splice__";
+    export type ArrayActions = "push__" | "splice__" | "insert__";
 
     export type ArrayActionProps = {
       node: RenderNode & { kind: "array" };
@@ -88,6 +89,7 @@
   import { pathToSnippetName, type PathToSnippetName } from "./naming.js";
   import { component } from "./defaults";
   import Self from "./Field.svelte";
+  import { attributes } from "./defaults/common.js";
 
   let { node, model, renderers, parent, index }: Props = $props();
 
@@ -117,6 +119,7 @@
 
   const pushRenderer = $derived(editableArray ? renderer("push__") : null);
   const spliceRenderer = $derived(editableArray ? renderer("splice__") : null);
+  const insertRenderer = $derived(editableArray ? renderer("insert__") : null);
 </script>
 
 {#snippet renderChild(
@@ -127,15 +130,15 @@
   <Self node={childNode} {model} {renderers} {parent} {index} />
 {/snippet}
 
-{#if optedOut}
-  {#if optInRenderer}
-    {@render optInRenderer(rendererArgs!)}
+<div {...attributes(node)} data-index={index}>
+  {#if optedOut}
+    {#if optInRenderer}
+      {@render optInRenderer(rendererArgs!)}
+    {:else}
+      {@const Component = component.byAction["opt_in__"]}
+      <Component {node} {model} />
+    {/if}
   {:else}
-    {@const Component = component.byAction["opt_in__"]}
-    <Component {node} {model} />
-  {/if}
-{:else}
-  <div data-kind={node.kind} data-path={node.path}>
     {#if canOptOut}
       {#if optOutRenderer}
         {@render optOutRenderer(rendererArgs!)}
@@ -159,7 +162,8 @@
         {renderChild}
         {pushRenderer}
         {spliceRenderer}
+        {insertRenderer}
       />
     {/if}
-  </div>
-{/if}
+  {/if}
+</div>
