@@ -2,7 +2,7 @@
   import type { RenderNode, SpecificNode } from "../../types.js";
   import type { SchemaModel } from "../../models.svelte.js";
   import type { RenderChild } from "../Field.svelte";
-  import { constDiscriminators, is } from "./common.js";
+  import { constDiscriminators, is, valueForNode } from "./common.js";
   import { basename } from "../naming.js";
 
   /**
@@ -59,27 +59,19 @@
 
 <script lang="ts">
   import { attributes, tooltip, title } from "./common.js";
-  import PlaceholderOption, { placeholder } from "./PlaceholderOption.svelte";
+  import PlaceholderOption from "./PlaceholderOption.svelte";
 
   let { node, model, renderChild }: Props = $props();
 
-  // svelte-ignore state_referenced_locally
-  const initial = node.variants.findIndex((v) => match(v, model.get(node)));
-
-  let value: number | typeof placeholder = $state(
-    initial < 0 ? placeholder : initial,
-  );
-
-  const selected = $derived(
-    value !== placeholder ? node.variants[value] : null,
-  );
-
-  $effect(() => {
-    if (selected) model.set(node, selected);
+  const value = $derived.by(() => {
+    const current = model.get(node);
+    console.log("Current value for oneOf:", current);
+    return node.variants.findIndex((variant) => match(variant, current));
   });
 </script>
 
-<fieldset {...attributes(node)}>
+{value}
+<fieldset>
   <legend title={tooltip(node, model)} {...attributes.role("name")}>
     {title(node, model)}
   </legend>
@@ -87,7 +79,11 @@
   {#if model.editable}
     <label {...attributes.role("variant-selector")}>
       <span {...attributes.role("name")}>Type</span>
-      <select bind:value>
+      <select
+        {value}
+        onchange={({ currentTarget: { value } }) =>
+          model.set(node, valueForNode(node.variants[Number(value)]))}
+      >
         <PlaceholderOption />
         {#each node.variants as variant, i}
           <option value={i}>{label(variant, i)}</option>
@@ -96,7 +92,7 @@
     </label>
   {/if}
 
-  {#if selected}
-    {@render renderChild(selected, "oneOf")}
+  {#if value >= 0}
+    {@render renderChild(node.variants[value], "oneOf")}
   {/if}
 </fieldset>

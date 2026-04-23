@@ -2,15 +2,16 @@
   import type { MouseEventHandler } from "svelte/elements";
   import type { Field } from "../Field.svelte";
   import type { Snippet } from "svelte";
-  import { attributes } from "./common.js";
 
   let {
     node,
     action,
+    detail,
     onclick,
     children,
   }: Field.Props & {
     action: string;
+    detail?: string;
     onclick: MouseEventHandler<HTMLButtonElement>;
     children: Snippet;
   } = $props();
@@ -18,8 +19,7 @@
 
 <button
   data-action={action}
-  {...attributes(node)}
-  title={`${action} ${node.title ?? node.path}`}
+  title={`${action} ${node.title ?? node.path}` + (detail ? ` ${detail}` : "")}
   {onclick}
 >
   {@render children()}

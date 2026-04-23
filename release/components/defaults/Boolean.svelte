@@ -3,14 +3,13 @@
   import { attributes, title, tooltip } from "./common.js";
 
   let { node, model }: Field.Props<"boolean"> = $props();
-  const { get, set } = $derived(model.accessors(node));
 </script>
 
-<label {...attributes(node)}>
+<label>
   <input
     type="checkbox"
-    checked={get() ?? false}
-    onchange={({ currentTarget: { checked } }) => set(checked)}
+    checked={model.get(node) ?? false}
+    onchange={({ currentTarget: { checked } }) => model.set(node, checked)}
     disabled={!model.editable}
   />
   <span title={tooltip(node, model)} {...attributes.role("name")}>

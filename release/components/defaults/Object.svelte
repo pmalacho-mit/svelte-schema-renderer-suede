@@ -4,7 +4,7 @@
   let { node, model, renderChild }: Field.Props<"object"> = $props();
 </script>
 
-<fieldset {...attributes(node)}>
+<fieldset>
   <legend title={tooltip(node, model)} {...attributes.role("name")}>
     {title(node, model)}
   </legend>

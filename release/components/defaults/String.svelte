@@ -18,38 +18,28 @@
 <script lang="ts">
   import type { Field } from "../Field.svelte";
   import { tooltip, title, attributes } from "./common.js";
-  import PlaceholderOption, { placeholder } from "./PlaceholderOption.svelte";
+  import PlaceholderOption from "./PlaceholderOption.svelte";
 
   let { node, model }: Field.Props<"string"> = $props();
 
-  // svelte-ignore state_referenced_locally
-  let value = $state(
-    node.const !== undefined
-      ? String(node.const)
-      : model.getOrFallback(node, placeholder),
-  );
-
+  const value = $derived(node.const ? String(node.const) : model.get(node));
   const type = $derived(format(node));
   const disabled = $derived(!model.editable || node.const !== undefined);
-
-  $effect(() => {
-    if (value !== placeholder) model.set(node, value);
-  });
 </script>
 
-<label {...attributes(node)}>
+<label>
   <span title={tooltip(node, model)} {...attributes.role("name")}>
     {title(node, model)}
   </span>
 
   {#if node.options}
-    <select bind:value {disabled}>
+    <select {value} {disabled} onchange={model.on(node)}>
       <PlaceholderOption />
-      {#each node.options as opt}
-        <option value={opt}>{opt}</option>
+      {#each node.options as option}
+        <option value={option}>{option}</option>
       {/each}
     </select>
   {:else}
-    <input bind:value {type} {disabled} />
+    <input {value} {type} {disabled} oninput={model.on(node)} />
   {/if}
 </label>

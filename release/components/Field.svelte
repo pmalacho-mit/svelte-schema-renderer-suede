@@ -18,6 +18,7 @@
       ? {
           pushRenderer: Snippet<[ArrayActionProps]> | null;
           spliceRenderer: Snippet<[ArrayActionProps]> | null;
+          insertRenderer: Snippet<[ArrayActionProps]> | null;
         }
       : {}) &
       (TKind extends "object" | "array" | "oneOf"
@@ -51,7 +52,7 @@
       >;
     };
 
-    export type ArrayActions = "push__" | "splice__";
+    export type ArrayActions = "push__" | "splice__" | "insert__";
 
     export type ArrayActionProps = {
       node: RenderNode & { kind: "array" };
@@ -118,6 +119,7 @@
 
   const pushRenderer = $derived(editableArray ? renderer("push__") : null);
   const spliceRenderer = $derived(editableArray ? renderer("splice__") : null);
+  const insertRenderer = $derived(editableArray ? renderer("insert__") : null);
 </script>
 
 {#snippet renderChild(
@@ -128,7 +130,7 @@
   <Self node={childNode} {model} {renderers} {parent} {index} />
 {/snippet}
 
-<div data-role="container" {...attributes(node)}>
+<div {...attributes(node)} data-index={index}>
   {#if optedOut}
     {#if optInRenderer}
       {@render optInRenderer(rendererArgs!)}
@@ -160,6 +162,7 @@
         {renderChild}
         {pushRenderer}
         {spliceRenderer}
+        {insertRenderer}
       />
     {/if}
   {/if}

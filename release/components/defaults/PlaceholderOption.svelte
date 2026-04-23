@@ -1,5 +1,5 @@
 <script lang="ts" module>
-  export const placeholder = "";
+  const placeholder = "";
 </script>
 
 <script>
