@@ -1,5 +1,11 @@
+<script lang="ts" module>
+  export const placeholder = "";
+</script>
+
 <script>
   import { attributes } from "./common";
 </script>
 
-<option value="" disabled {...attributes.role("placeholder")}>Select…</option>
+<option disabled value={placeholder} {...attributes.role("placeholder")}>
+  Select…
+</option>

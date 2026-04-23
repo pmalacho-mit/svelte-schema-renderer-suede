@@ -1,5 +1,4 @@
 <script lang="ts" module>
-  import type { ChangeEventHandler } from "svelte/elements";
   import type { SpecificNode } from "../../types.js";
 
   const formats = {
@@ -19,20 +18,23 @@
 <script lang="ts">
   import type { Field } from "../Field.svelte";
   import { tooltip, title, attributes } from "./common.js";
-  import PlaceholderOption from "./PlaceholderOption.svelte";
+  import PlaceholderOption, { placeholder } from "./PlaceholderOption.svelte";
 
   let { node, model }: Field.Props<"string"> = $props();
 
-  const { get, set } = $derived(model.accessors(node));
-  const update: ChangeEventHandler<HTMLInputElement | HTMLSelectElement> = ({
-    currentTarget: { value },
-  }) => set(value);
+  // svelte-ignore state_referenced_locally
+  let value = $state(
+    node.const !== undefined
+      ? String(node.const)
+      : model.getOrFallback(node, placeholder),
+  );
 
   const type = $derived(format(node));
-  const value = $derived(
-    node.const !== undefined ? String(node.const) : (get() ?? ""),
-  );
   const disabled = $derived(!model.editable || node.const !== undefined);
+
+  $effect(() => {
+    if (value !== placeholder) model.set(node, value);
+  });
 </script>
 
 <label {...attributes(node)}>
@@ -41,13 +43,13 @@
   </span>
 
   {#if node.options}
-    <select {value} {disabled} onchange={update}>
+    <select bind:value {disabled}>
       <PlaceholderOption />
       {#each node.options as opt}
         <option value={opt}>{opt}</option>
       {/each}
     </select>
   {:else}
-    <input {type} {value} {disabled} oninput={update} />
+    <input bind:value {type} {disabled} />
   {/if}
 </label>

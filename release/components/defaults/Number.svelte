@@ -4,10 +4,17 @@
   import PlaceholderOption from "./PlaceholderOption.svelte";
 
   let { node, model }: Field.Props<"number"> = $props();
-  const { get, set } = $derived(model.accessors(node));
 
-  const value = $derived(String(get() ?? ""));
+  // svelte-ignore state_referenced_locally
+  let value = $state(
+    model.getOrFallback(node, node.options?.[0] ?? node.min ?? 0),
+  );
+
   const disabled = $derived(!model.editable);
+
+  $effect(() => {
+    model.set(node, value);
+  });
 </script>
 
 <label {...attributes(node)}>
@@ -16,24 +23,13 @@
   </span>
 
   {#if node.options}
-    <select
-      {value}
-      {disabled}
-      onchange={({ currentTarget: { value } }) => set(Number(value))}
-    >
+    <select bind:value {disabled}>
       <PlaceholderOption />
-      {#each node.options as opt}
-        <option value={String(opt)}>{opt}</option>
+      {#each node.options as option}
+        <option value={option}>{option}</option>
       {/each}
     </select>
   {:else}
-    <input
-      type="number"
-      {value}
-      {disabled}
-      min={node.min}
-      max={node.max}
-      oninput={({ currentTarget: { valueAsNumber } }) => set(valueAsNumber)}
-    />
+    <input type="number" bind:value {disabled} {...node} />
   {/if}
 </label>

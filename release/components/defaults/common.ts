@@ -1,6 +1,21 @@
 import type { Model } from "../..";
-import type { Kind, RenderNode } from "../../types";
+import type { Kind, RenderNode, SpecificNode } from "../../types";
 import { basename } from "../naming.js";
+
+export const is = {
+  const: (node: RenderNode): node is SpecificNode<"string"> =>
+    node.kind === "string" && node.const !== undefined,
+};
+
+/** Extracts const-valued string children as a key→value map, keyed by field basename. */
+export const constDiscriminators = (
+  children: SpecificNode<"object">["children"],
+): Record<string, unknown> => {
+  const result: Record<string, unknown> = {};
+  for (const child of children)
+    if (is.const(child)) result[basename(child.path)] = child.const;
+  return result;
+};
 
 type Defaultable = Exclude<Kind, "oneOf" | "enum" | "unknown">;
 
@@ -23,6 +38,7 @@ export const valueForNode = (node: RenderNode): unknown => {
     const itemDefault = valueForNode(node.itemNode);
     return itemDefault !== null ? [itemDefault] : [];
   }
+  if (node.kind === "object") return constDiscriminators(node.children);
   if ("default" in node)
     return node.default ?? defaults[node.kind as Defaultable];
   return defaultable(node) ? defaults[node.kind] : null;
@@ -40,7 +56,9 @@ export const attributes = Object.assign(
     "data-path": node.path,
   }),
   {
-    role: (detail: "container" | "name" | "placeholder") => ({
+    role: (
+      detail: "container" | "name" | "placeholder" | "variant-selector",
+    ) => ({
       "data-role": detail,
     }),
   },

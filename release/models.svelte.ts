@@ -36,7 +36,16 @@ export class SchemaModel<TMode extends Mode = Mode, TData extends Data = Data> {
   get<K extends Kind>({
     path,
   }: Pick<RenderNode & { kind: K }, "path" | "kind">): FromKind<K> | undefined {
+    if (path === "") return this.data as unknown as FromKind<K>;
     return path.split(".").reduce<any>((obj, key) => obj?.[key], this.data);
+  }
+
+  getOrFallback<K extends Kind, const Fallback>(
+    node: Pick<RenderNode & { kind: K }, "path" | "kind">,
+    fallback: Fallback,
+  ): FromKind<K> | Fallback {
+    const value = this.get<K>(node);
+    return value !== undefined ? value : fallback;
   }
 
   set<K extends Kind>(
