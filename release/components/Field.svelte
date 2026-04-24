@@ -108,8 +108,12 @@
       null) as Snippet<[Field.Props<any>]> | null;
 
   const nodeRenderer = $derived(!optedOut ? renderer() : null);
-  const optInRenderer = $derived(optedOut && model.editable ? renderer("opt_in__") : null);
-  const optedOutRenderer = $derived(optedOut && !model.editable ? renderer("opted_out__") : null);
+  const optInRenderer = $derived(
+    optedOut && model.editable ? renderer("opt_in__") : null,
+  );
+  const optedOutRenderer = $derived(
+    optedOut && !model.editable ? renderer("opted_out__") : null,
+  );
   const optOutRenderer = $derived(canOptOut ? renderer("opt_out__") : null);
 
   const rendererArgs = $derived(

@@ -62,27 +62,19 @@ const prefetchExternalRefs = async (
 };
 
 const node = (raw: JSONSchema7, path: string, ctx: Context): RenderNode => {
-  // Step 1: Resolve $ref (possibly recursive)
-  let schema = resolve(raw, ctx);
-
-  // Step 2: Merge composition keywords into a single effective schema
-  schema = merge(schema, ctx);
-
+  const schema = merge(resolve(raw, ctx), ctx);
   const { oneOf, anyOf, title, description, enum: options } = schema;
 
-  // Step 3: If we still have oneOf/anyOf that couldn't be merged,
+  // If we still have oneOf/anyOf that couldn't be merged,
   // produce a variant node (discriminated union in the UI)
   if (oneOf || anyOf) return variant(schema, path, ctx);
 
-  // Step 4: Infer type if not explicitly stated
   const kind = infer(schema);
 
-  // Step 5: Only catch *untyped* enums as a generic enum node.
-  // Typed enums fall through to their type-specific handler
+  // Catch *untyped* enums as a generic enum node.
   if (options && !kind)
     return { kind: "enum", path, title, description, options };
 
-  // Step 6: Dispatch on type
   switch (kind) {
     case "string":
       if (!valid.options("string", options))
@@ -200,9 +192,9 @@ const array = (schema: JSONSchema7, path: string, ctx: Context) => {
   return {
     kind: "array",
     path,
+    itemNode,
     title: schema.title,
     description: schema.description,
-    itemNode,
     minItems: schema.minItems,
     maxItems: schema.maxItems,
   } satisfies RenderNode;
