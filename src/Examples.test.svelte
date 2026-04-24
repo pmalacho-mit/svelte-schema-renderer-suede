@@ -26,26 +26,48 @@
       })),
   }));
 
-  // Flatten a data object to leaf { path, value } pairs.
-  // Arrays and primitives are treated as atomic leaves (not recursed into).
-  function leaves(
-    obj: unknown,
+  // Generates streaming steps that mimic LLM token-by-token output:
+  // - strings arrive a few characters at a time
+  // - array elements populate one by one (each element's fields also stream)
+  // - object fields appear sequentially
+  // - numbers and booleans arrive in a single step
+  function* streamSteps(
+    data: unknown,
+    chunk_size: number,
     base = "",
-  ): { path: string; value: unknown }[] {
-    if (typeof obj !== "object" || obj === null || Array.isArray(obj)) {
-      return base ? [{ path: base, value: obj }] : [];
+  ): Generator<{ path: string; value: unknown }> {
+    if (typeof data === "string") {
+      for (let i = chunk_size; i < data.length; i += chunk_size)
+        yield { path: base, value: data.slice(0, i) };
+      yield { path: base, value: data };
+      return;
     }
-    return Object.entries(obj as Record<string, unknown>).flatMap(([k, v]) => {
-      const path = base ? `${base}.${k}` : k;
-      return typeof v === "object" && v !== null && !Array.isArray(v)
-        ? leaves(v, path)
-        : [{ path, value: v }];
-    });
+
+    if (typeof data !== "object" || data === null) {
+      yield { path: base, value: data };
+      return;
+    }
+
+    if (Array.isArray(data)) {
+      // Initialize to empty so the array container renders immediately
+      if (base) yield { path: base, value: [] };
+      for (let i = 0; i < data.length; i++)
+        yield* streamSteps(
+          data[i],
+          chunk_size,
+          base ? `${base}.${i}` : String(i),
+        );
+      return;
+    }
+
+    for (const [k, v] of Object.entries(data as Record<string, unknown>))
+      yield* streamSteps(v, chunk_size, base ? `${base}.${k}` : k);
   }
 
   let selected = $state(0);
   let mode = $state<Mode>("edit");
   let streamRate = $state(300);
+  let chunkSize = $state(5);
 
   type RootNode = Awaited<ReturnType<typeof root>>;
   type RenderConfig = { model: InstanceType<typeof Model>; rootNode: RootNode };
@@ -73,7 +95,7 @@
 
       if (currentMode !== "stream") return;
 
-      const items = leaves(data);
+      const items = [...streamSteps(data, chunkSize)];
       let i = 0;
       intervalId = setInterval(() => {
         if (i >= items.length) {
@@ -92,7 +114,9 @@
   });
 </script>
 
-<div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap;">
+<div
+  style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap;"
+>
   <select bind:value={selected}>
     {#each options as option, index}
       <option value={index}>{option.path.split("/").at(-1)}</option>
@@ -107,7 +131,7 @@
 
   {#if mode === "stream"}
     <label>
-      stream rate:
+      stream rate (ms / step):
       <input
         type="number"
         bind:value={streamRate}
@@ -116,7 +140,17 @@
         step={50}
         style="width: 80px;"
       />
-      ms / item
+    </label>
+    <label>
+      string chunk size (chars / step):
+      <input
+        type="number"
+        bind:value={chunkSize}
+        min={1}
+        max={20}
+        step={1}
+        style="width: 80px;"
+      />
     </label>
   {/if}
 </div>

@@ -5,8 +5,8 @@
 
   let { node, model, index }: Field.ArrayActionProps = $props();
 
-  const onclick = () =>
-    model.get(node)?.splice(index, 0, valueForNode(node.itemNode));
+  const onclick = async () =>
+    model.get(node)?.splice(index, 0, await valueForNode(node.itemNode));
 </script>
 
 <Action {node} {model} {onclick} action="insert" detail="at {index}">
