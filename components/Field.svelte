@@ -18,6 +18,7 @@
       ? {
           pushRenderer: Snippet<[ArrayActionProps]> | null;
           spliceRenderer: Snippet<[ArrayActionProps]> | null;
+          insertRenderer: Snippet<[ArrayActionProps]> | null;
         }
       : {}) &
       (TKind extends "object" | "array" | "oneOf"
@@ -26,7 +27,7 @@
           }
         : {});
 
-    export type RenderActions = "opt_in__" | "opt_out__";
+    export type RenderActions = "opt_in__" | "opt_out__" | "opted_out__";
 
     export type RenderKeys = "" | RenderActions;
 
@@ -51,7 +52,7 @@
       >;
     };
 
-    export type ArrayActions = "push__" | "splice__";
+    export type ArrayActions = "push__" | "splice__" | "insert__";
 
     export type ArrayActionProps = {
       node: RenderNode & { kind: "array" };
@@ -107,17 +108,19 @@
       null) as Snippet<[Field.Props<any>]> | null;
 
   const nodeRenderer = $derived(!optedOut ? renderer() : null);
-  const optInRenderer = $derived(optedOut ? renderer("opt_in__") : null);
+  const optInRenderer = $derived(optedOut && model.editable ? renderer("opt_in__") : null);
+  const optedOutRenderer = $derived(optedOut && !model.editable ? renderer("opted_out__") : null);
   const optOutRenderer = $derived(canOptOut ? renderer("opt_out__") : null);
 
   const rendererArgs = $derived(
-    nodeRenderer || optInRenderer || optOutRenderer
+    nodeRenderer || optInRenderer || optedOutRenderer || optOutRenderer
       ? { node, model, renderChild }
       : null,
   );
 
   const pushRenderer = $derived(editableArray ? renderer("push__") : null);
   const spliceRenderer = $derived(editableArray ? renderer("splice__") : null);
+  const insertRenderer = $derived(editableArray ? renderer("insert__") : null);
 </script>
 
 {#snippet renderChild(
@@ -128,9 +131,13 @@
   <Self node={childNode} {model} {renderers} {parent} {index} />
 {/snippet}
 
-<div data-role="container" {...attributes(node)}>
+<div {...attributes(node)} data-index={index}>
   {#if optedOut}
-    {#if optInRenderer}
+    {#if !model.editable}
+      {#if optedOutRenderer}
+        {@render optedOutRenderer(rendererArgs!)}
+      {/if}
+    {:else if optInRenderer}
       {@render optInRenderer(rendererArgs!)}
     {:else}
       {@const Component = component.byAction["opt_in__"]}
@@ -160,6 +167,7 @@
         {renderChild}
         {pushRenderer}
         {spliceRenderer}
+        {insertRenderer}
       />
     {/if}
   {/if}

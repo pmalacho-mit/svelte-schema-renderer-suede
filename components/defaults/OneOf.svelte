@@ -2,50 +2,74 @@
   import type { RenderNode, SpecificNode } from "../../types.js";
   import type { SchemaModel } from "../../models.svelte.js";
   import type { RenderChild } from "../Field.svelte";
-  import { constDiscriminators, is } from "./common.js";
-  import { basename } from "../naming.js";
+  import { constDiscriminators, is, valueForNode } from "./common.js";
 
-  /**
-   * Rough structural match: checks whether the current value
-   * is plausibly described by the given variant node.
-   */
-  const match = (variant: RenderNode, value: unknown): boolean => {
-    switch (variant.kind) {
-      case "string":
-        if (typeof value !== "string") return false;
-        if (variant.options && !variant.options.includes(value)) return false;
-        return true;
-      case "number":
-        return typeof value === "number";
-      case "boolean":
-        return typeof value === "boolean";
-      case "object":
-        if (typeof value !== "object" || value === null || Array.isArray(value))
+  export const match = {
+    /**
+     * Exact structural match: checks whether the current value is described
+     * by the given variant node based on type and const discriminators.
+     * Does not check required field presence — use `fuzzyMatch` as a fallback
+     * for object variants that lack const discriminators.
+     */
+    exact: (value: unknown, variant: RenderNode): boolean => {
+      switch (variant.kind) {
+        case "string":
+          if (typeof value !== "string") return false;
+          if (variant.options && !variant.options.includes(value)) return false;
+          return true;
+        case "number":
+          return typeof value === "number";
+        case "boolean":
+          return typeof value === "boolean";
+        case "object":
+          if (
+            typeof value !== "object" ||
+            value === null ||
+            Array.isArray(value)
+          )
+            return false;
+          for (const [key, val] of Object.entries(
+            constDiscriminators(variant.children),
+          ))
+            if ((value as Record<string, unknown>)[key] !== val) return false;
+          return true;
+        case "array":
+          return Array.isArray(value);
+        case "enum":
+          return (variant as SpecificNode<"enum">).options.includes(value);
+        default:
           return false;
-        const casted = value as Record<string, unknown>;
-        const { children, required } = variant;
-
-        for (const [key, val] of Object.entries(constDiscriminators(children)))
-          if (casted[key] !== val) return false;
-
-        for (const key of required) {
-          const childPath = children.find(({ path }) => basename(path) === key);
-          if (childPath && !(key in casted)) return false;
+      }
+    },
+    /**
+     * Fuzzy fallback for object variants without const discriminators.
+     * Scores each variant by how many of its required fields are present
+     * in the value, and returns the index of the best match.
+     * Returns -1 if no variant scores above zero.
+     */
+    fuzzy: (value: unknown, variants: RenderNode[]): number => {
+      if (typeof value !== "object" || value === null || Array.isArray(value))
+        return -1;
+      const casted = value as Record<string, unknown>;
+      let bestIndex = -1;
+      let bestScore = 0;
+      for (let i = 0; i < variants.length; i++) {
+        const variant = variants[i];
+        if (variant.kind !== "object") continue;
+        let score = 0;
+        for (const key of variant.required) if (key in casted) score++;
+        if (score > bestScore) {
+          bestScore = score;
+          bestIndex = i;
         }
-        return true;
-      case "array":
-        return Array.isArray(value);
-      case "enum":
-        return (variant as SpecificNode<"enum">).options.includes(value);
-      default:
-        return false;
-    }
-  };
+      }
+      return bestIndex;
+    },
 
-  export type Props = {
-    node: SpecificNode<"oneOf">;
-    model: SchemaModel;
-    renderChild: RenderChild;
+    find: (value: unknown, { variants }: SpecificNode<"oneOf">) => {
+      const exact = variants.findIndex(match.exact.bind(null, value));
+      return exact >= 0 ? exact : match.fuzzy(value, variants);
+    },
   };
 
   const label = (variant: RenderNode, index: number): string => {
@@ -55,31 +79,26 @@
         if (is.const(child)) return String(child.const);
     return `Option ${index + 1}`;
   };
+
+  export type Props = {
+    node: SpecificNode<"oneOf">;
+    model: SchemaModel;
+    renderChild: RenderChild;
+  };
 </script>
 
 <script lang="ts">
   import { attributes, tooltip, title } from "./common.js";
-  import PlaceholderOption, { placeholder } from "./PlaceholderOption.svelte";
+  import PlaceholderOption from "./PlaceholderOption.svelte";
 
   let { node, model, renderChild }: Props = $props();
 
-  // svelte-ignore state_referenced_locally
-  const initial = node.variants.findIndex((v) => match(v, model.get(node)));
-
-  let value: number | typeof placeholder = $state(
-    initial < 0 ? placeholder : initial,
-  );
-
-  const selected = $derived(
-    value !== placeholder ? node.variants[value] : null,
-  );
-
-  $effect(() => {
-    if (selected) model.set(node, selected);
-  });
+  const value = $derived.by(() => match.find(model.get(node), node));
+  const set = async (index: string | number) =>
+    model.set(node, await valueForNode(node.variants[Number(index)]));
 </script>
 
-<fieldset {...attributes(node)}>
+<fieldset>
   <legend title={tooltip(node, model)} {...attributes.role("name")}>
     {title(node, model)}
   </legend>
@@ -87,7 +106,7 @@
   {#if model.editable}
     <label {...attributes.role("variant-selector")}>
       <span {...attributes.role("name")}>Type</span>
-      <select bind:value>
+      <select {value} onchange={({ currentTarget: { value } }) => set(value)}>
         <PlaceholderOption />
         {#each node.variants as variant, i}
           <option value={i}>{label(variant, i)}</option>
@@ -96,7 +115,7 @@
     </label>
   {/if}
 
-  {#if selected}
-    {@render renderChild(selected, "oneOf")}
+  {#if value >= 0}
+    {@render renderChild(node.variants[value], "oneOf")}
   {/if}
 </fieldset>

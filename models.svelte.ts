@@ -12,6 +12,11 @@ export type SchemaModelOptions = {
   abbreviatePaths?: boolean;
 };
 
+type EventToHandle = Event & {
+  currentTarget: (EventTarget & HTMLInputElement) | HTMLSelectElement;
+};
+type EventHandler = (event: EventToHandle) => void;
+
 export class SchemaModel<TMode extends Mode = Mode, TData extends Data = Data> {
   data = $state({} as State<TMode, TData>);
 
@@ -32,16 +37,18 @@ export class SchemaModel<TMode extends Mode = Mode, TData extends Data = Data> {
     if (initial) this.data = structuredClone(initial);
   }
 
-  /** Read a value at a dotted path */
+  /**
+   * Read a value at a dotted path
+   */
   get<K extends Kind>({
     path,
-  }: Pick<RenderNode & { kind: K }, "path" | "kind">): FromKind<K> | undefined {
+  }: Pick<RenderNode, "path"> & { kind?: K }): FromKind<K> | undefined {
     if (path === "") return this.data as unknown as FromKind<K>;
     return path.split(".").reduce<any>((obj, key) => obj?.[key], this.data);
   }
 
   getOrFallback<K extends Kind, const Fallback>(
-    node: Pick<RenderNode & { kind: K }, "path" | "kind">,
+    node: Pick<RenderNode, "path"> & { kind?: K },
     fallback: Fallback,
   ): FromKind<K> | Fallback {
     const value = this.get<K>(node);
@@ -49,7 +56,7 @@ export class SchemaModel<TMode extends Mode = Mode, TData extends Data = Data> {
   }
 
   set<K extends Kind>(
-    { path }: Pick<RenderNode & { kind: K }, "path" | "kind">,
+    { path }: Pick<RenderNode, "path"> & { kind?: K },
     value: FromKind<K>,
   ): void {
     this.#set(path, value);
@@ -87,12 +94,33 @@ export class SchemaModel<TMode extends Mode = Mode, TData extends Data = Data> {
     }
   }
 
-  accessors<K extends Kind>(node: RenderNode & { kind: K }) {
-    return {
-      get: () =>
-        this.get<K>(node as Pick<RenderNode & { kind: K }, "path" | "kind">),
-      set: (value: FromKind<K>) => this.set(node, value),
-      remove: () => this.remove(node),
-    };
+  /**
+   * Returns an event handler that reads `event.currentTarget.value` and
+   * writes it to the model at `node`'s path.
+   *
+   * Use the single-argument overload for string fields — no converter needed:
+   * ```svelte
+   * <input oninput={model.on(node)} />
+   * ```
+   *
+   * Pass a converter for non-string fields so the raw string value is cast
+   * to the correct type before writing:
+   * ```svelte
+   * <input type="number" oninput={model.on(node, Number)} />
+   * ```
+   */
+  on<K extends Kind>(
+    node: Pick<RenderNode, "path"> & { kind?: "string" },
+  ): EventHandler;
+  on<K extends Kind>(
+    node: Pick<RenderNode, "path"> & { kind?: K },
+    converter: (value: string) => FromKind<K>,
+  ): EventHandler;
+  on<K extends Kind>(
+    node: Pick<RenderNode, "path"> & { kind?: K },
+    converter?: (value: string) => FromKind<K>,
+  ): EventHandler {
+    return ({ currentTarget: { value } }) =>
+      this.set(node, converter ? converter(value) : (value as FromKind<K>));
   }
 }

@@ -5,7 +5,7 @@
 
   let { node, model }: Field.Props = $props();
 
-  const onclick = () => model.set(node, valueForNode(node));
+  const onclick = async () => model.set(node, await valueForNode(node));
 </script>
 
 <Action {node} {model} {onclick} action="opt-in">

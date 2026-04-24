@@ -1,26 +1,25 @@
 <script lang="ts">
   import type { Field } from "../Field.svelte";
   import { attributes, title, tooltip } from "./common.js";
-  import PlaceholderOption, { placeholder } from "./PlaceholderOption.svelte";
+  import PlaceholderOption from "./PlaceholderOption.svelte";
 
   let { node, model }: Field.Props<"enum"> = $props();
 
-  // svelte-ignore state_referenced_locally
-  let value = $state(model.getOrFallback(node, placeholder));
-
-  $effect(() => {
-    if (value !== placeholder) model.set(node, value);
-  });
+  const onchange = $derived(
+    model.on(node, (value) =>
+      node.options.find((option) => String(option) === value),
+    ),
+  );
 </script>
 
-<label {...attributes(node)}>
+<label>
   <span title={tooltip(node, model)} {...attributes.role("name")}>
     {title(node, model)}
   </span>
-  <select bind:value disabled={!model.editable}>
+  <select value={model.get(node)} disabled={!model.editable} {onchange}>
     <PlaceholderOption />
-    {#each node.options as opt}
-      <option value={opt}>{opt}</option>
+    {#each node.options as option}
+      <option value={option}>{option}</option>
     {/each}
   </select>
 </label>
