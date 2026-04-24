@@ -57,7 +57,12 @@ export const attributes = Object.assign(
   }),
   {
     role: (
-      detail: "container" | "name" | "placeholder" | "variant-selector",
+      detail:
+        | "container"
+        | "name"
+        | "placeholder"
+        | "variant-selector"
+        | "root-container",
     ) => ({
       "data-role": detail,
     }),

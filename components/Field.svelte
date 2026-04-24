@@ -27,7 +27,7 @@
           }
         : {});
 
-    export type RenderActions = "opt_in__" | "opt_out__";
+    export type RenderActions = "opt_in__" | "opt_out__" | "opted_out__";
 
     export type RenderKeys = "" | RenderActions;
 
@@ -108,11 +108,16 @@
       null) as Snippet<[Field.Props<any>]> | null;
 
   const nodeRenderer = $derived(!optedOut ? renderer() : null);
-  const optInRenderer = $derived(optedOut ? renderer("opt_in__") : null);
+  const optInRenderer = $derived(
+    optedOut && model.editable ? renderer("opt_in__") : null,
+  );
+  const optedOutRenderer = $derived(
+    optedOut && !model.editable ? renderer("opted_out__") : null,
+  );
   const optOutRenderer = $derived(canOptOut ? renderer("opt_out__") : null);
 
   const rendererArgs = $derived(
-    nodeRenderer || optInRenderer || optOutRenderer
+    nodeRenderer || optInRenderer || optedOutRenderer || optOutRenderer
       ? { node, model, renderChild }
       : null,
   );
@@ -132,7 +137,11 @@
 
 <div {...attributes(node)} data-index={index}>
   {#if optedOut}
-    {#if optInRenderer}
+    {#if !model.editable}
+      {#if optedOutRenderer}
+        {@render optedOutRenderer(rendererArgs!)}
+      {/if}
+    {:else if optInRenderer}
       {@render optInRenderer(rendererArgs!)}
     {:else}
       {@const Component = component.byAction["opt_in__"]}

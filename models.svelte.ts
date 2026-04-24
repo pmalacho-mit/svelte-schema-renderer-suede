@@ -19,6 +19,7 @@ type EventHandler = (event: EventToHandle) => void;
 
 export class SchemaModel<TMode extends Mode = Mode, TData extends Data = Data> {
   data = $state({} as State<TMode, TData>);
+  container = $state<HTMLDivElement>();
 
   readonly mode: TMode;
   readonly abbreviatePaths: boolean;
@@ -45,14 +46,6 @@ export class SchemaModel<TMode extends Mode = Mode, TData extends Data = Data> {
   }: Pick<RenderNode, "path"> & { kind?: K }): FromKind<K> | undefined {
     if (path === "") return this.data as unknown as FromKind<K>;
     return path.split(".").reduce<any>((obj, key) => obj?.[key], this.data);
-  }
-
-  getOrFallback<K extends Kind, const Fallback>(
-    node: Pick<RenderNode, "path"> & { kind?: K },
-    fallback: Fallback,
-  ): FromKind<K> | Fallback {
-    const value = this.get<K>(node);
-    return value !== undefined ? value : fallback;
   }
 
   set<K extends Kind>(
@@ -122,5 +115,11 @@ export class SchemaModel<TMode extends Mode = Mode, TData extends Data = Data> {
   ): EventHandler {
     return ({ currentTarget: { value } }) =>
       this.set(node, converter ? converter(value) : (value as FromKind<K>));
+  }
+
+  element({ path }: Pick<RenderNode, "path">) {
+    return this.container?.querySelector<HTMLDivElement>(
+      `[data-path="${path}"]`,
+    );
   }
 }
