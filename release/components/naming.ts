@@ -63,6 +63,15 @@ const resolveAtIndex = (index: number, node: RenderNode): RenderNode => {
         ? { ...node, path, itemNode }
         : node;
 
+    case "tuple":
+      const itemNodes = stableMap(
+        node.itemNodes,
+        resolveAtIndex.bind(null, index),
+      );
+      return pathChanged || itemNodes !== node.itemNodes
+        ? { ...node, path, itemNodes }
+        : node;
+
     case "oneOf":
       const variants = stableMap(
         node.variants,

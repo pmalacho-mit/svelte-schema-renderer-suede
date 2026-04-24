@@ -50,6 +50,14 @@ export type RenderNode =
       }
     >
   | Base<
+      "tuple",
+      {
+        itemNodes: RenderNode[];
+        minItems?: number;
+        maxItems?: number;
+      }
+    >
+  | Base<
       "enum",
       {
         options: unknown[];

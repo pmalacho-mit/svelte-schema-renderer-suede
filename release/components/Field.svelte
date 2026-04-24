@@ -5,14 +5,14 @@
 
   export type RenderChild = Snippet<
     | [node: RenderNode, parent: "object" | "oneOf"]
-    | [node: RenderNode, parent: "array", index: number]
+    | [node: RenderNode, parent: "array" | "tuple", index: number]
   >;
 
   export namespace Field {
     export type Props<TKind extends Kind = Kind> = {
       node: RenderNode & { kind: TKind };
       model: SchemaModel;
-      parent?: "object" | "array" | "oneOf";
+      parent?: "object" | "array" | "oneOf" | "tuple";
       index?: number;
     } & (TKind extends "array"
       ? {
@@ -21,7 +21,7 @@
           insertRenderer: Snippet<[ArrayActionProps]> | null;
         }
       : {}) &
-      (TKind extends "object" | "array" | "oneOf"
+      (TKind extends "object" | "array" | "oneOf" | "tuple"
         ? {
             renderChild: RenderChild;
           }
@@ -80,7 +80,7 @@
     node: RenderNode;
     model: SchemaModel;
     renderers?: Field.Renderers;
-    parent?: "object" | "array" | "oneOf";
+    parent?: "object" | "array" | "oneOf" | "tuple";
     index?: number;
   };
 </script>
@@ -129,7 +129,7 @@
 
 {#snippet renderChild(
   childNode: RenderNode,
-  parent: "array" | "object" | "oneOf",
+  parent: "array" | "tuple" | "object" | "oneOf",
   index?: number,
 )}
   <Self node={childNode} {model} {renderers} {parent} {index} />
