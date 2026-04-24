@@ -177,22 +177,31 @@ const object = (schema: JSONSchema7, path: string, ctx: Context) => {
 };
 
 const array = (schema: JSONSchema7, path: string, ctx: Context) => {
-  let itemSchema: JSONSchema7 = {};
+  if (Array.isArray(schema.items)) return tuple(schema, path, ctx);
 
-  if (schema.items)
-    if (Array.isArray(schema.items))
-      // Tuple validation — merge all item schemas as an allOf
-      // so the render tree captures all possible shapes.
-      // (A more sophisticated approach would use a tuple node.)
-      itemSchema = { allOf: schema.items.filter(isSchema) };
-    else if (isSchema(schema.items)) itemSchema = schema.items;
-
+  const itemSchema = isSchema(schema.items) ? schema.items : {};
   const itemNode = node(itemSchema, `${path}.*`, ctx);
 
   return {
     kind: "array",
     path,
     itemNode,
+    title: schema.title,
+    description: schema.description,
+    minItems: schema.minItems,
+    maxItems: schema.maxItems,
+  } satisfies RenderNode;
+};
+
+const tuple = (schema: JSONSchema7, path: string, ctx: Context) => {
+  const itemNodes = (schema.items as JSONSchema7[])
+    .filter(isSchema)
+    .map((itemSchema, i) => node(itemSchema as JSONSchema7, `${path}.${i}`, ctx));
+
+  return {
+    kind: "tuple",
+    path,
+    itemNodes,
     title: schema.title,
     description: schema.description,
     minItems: schema.minItems,

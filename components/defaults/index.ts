@@ -7,6 +7,7 @@ import Boolean from "./Boolean.svelte";
 import Enum from "./Enum.svelte";
 import Object from "./Object.svelte";
 import Array from "./Array.svelte";
+import Tuple from "./Tuple.svelte";
 import OneOf from "./OneOf.svelte";
 import Unknown from "./Unknown.svelte";
 import OptIn from "./OptIn.svelte";
@@ -23,6 +24,7 @@ export const component = {
     enum: Enum,
     object: Object,
     array: Array,
+    tuple: Tuple,
     oneOf: OneOf,
     unknown: Unknown,
   } satisfies {
