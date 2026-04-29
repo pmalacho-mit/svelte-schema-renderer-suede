@@ -1,5 +1,5 @@
 import { mount } from "svelte";
-import Gallery from "../suede/sweater-vest-suede/vite/Gallery.svelte";
+import Gallery from "../.suede/sweater-vest-suede/vite/Gallery.svelte";
 
 const app = mount(Gallery, {
   target: document.getElementById("app")!,
