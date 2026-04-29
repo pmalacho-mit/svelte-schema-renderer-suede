@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { JSONSchema7 } from "json-schema";
-  import { Sweater } from "../../suede/sweater-vest-suede";
+  import { Sweater } from "../../.suede/sweater-vest-suede";
   import { Model, Schema, root } from "../../release";
   import { Pocket } from "../common.svelte";
   import { flushSync } from "svelte";
